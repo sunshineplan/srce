@@ -1,10 +1,17 @@
 package misc
 
-import "log"
+import (
+	"log"
+
+	"github.com/sunshineplan/metadata"
+)
+
+// MetadataConfig is metadata server config
+var MetadataConfig = new(metadata.Config)
 
 // GetUsers get auth user info
 func GetUsers() interface{} {
-	users, err := Metadata("srce_user")
+	users, err := metadata.Get("srce_user", MetadataConfig)
 	if err != nil {
 		log.Print(err)
 	}
@@ -13,25 +20,25 @@ func GetUsers() interface{} {
 
 // GetConfig get server setting
 func GetConfig() (allowCommands interface{}, commandPath interface{}, mailConfig Subscribe) {
-	allowCommands, err := Metadata("srce_command")
+	allowCommands, err := metadata.Get("srce_command", MetadataConfig)
 	if err != nil {
 		log.Print(err)
 	}
-	commandPath, err = Metadata("srce_path")
+	commandPath, err = metadata.Get("srce_path", MetadataConfig)
 	if err != nil {
 		log.Print(err)
 	}
 
-	metadata, err := Metadata("srce_subscribe")
+	srceSubscribe, err := metadata.Get("srce_subscribe", MetadataConfig)
 	if err != nil {
 		log.Print(err)
 	}
 	mailConfig = Subscribe{
-		Sender:         metadata.(map[string]interface{})["sender"].(string),
-		Password:       metadata.(map[string]interface{})["password"].(string),
-		SMTPServer:     metadata.(map[string]interface{})["smtp_server"].(string),
-		SMTPServerPort: int(metadata.(map[string]interface{})["smtp_server_port"].(float64)),
-		Subscriber:     metadata.(map[string]interface{})["subscriber"].(string),
+		Sender:         srceSubscribe.(map[string]interface{})["sender"].(string),
+		Password:       srceSubscribe.(map[string]interface{})["password"].(string),
+		SMTPServer:     srceSubscribe.(map[string]interface{})["smtp_server"].(string),
+		SMTPServerPort: int(srceSubscribe.(map[string]interface{})["smtp_server_port"].(float64)),
+		Subscriber:     srceSubscribe.(map[string]interface{})["subscriber"].(string),
 	}
 	return
 }
