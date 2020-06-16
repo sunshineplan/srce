@@ -2,37 +2,81 @@ package misc
 
 import (
 	"log"
+	"time"
 
+	"github.com/avast/retry-go"
 	"github.com/sunshineplan/metadata"
 )
 
 // MetadataConfig is metadata server config
 var MetadataConfig = new(metadata.Config)
 
+var (
+	// Attempts is default retry attempts
+	Attempts = uint(3)
+	// Delay is default retry delay
+	Delay = 10 * time.Second
+	// LastErrorOnly return all errors if false
+	LastErrorOnly = true
+)
+
 // GetUsers get auth user info
-func GetUsers() interface{} {
-	users, err := metadata.Get("srce_user", MetadataConfig)
-	if err != nil {
-		log.Print(err)
-	}
-	return users
+func GetUsers() (users interface{}) {
+	retry.Do(
+		func() (err error) {
+			users, err = metadata.Get("srce_user", MetadataConfig)
+			return
+		},
+		retry.Attempts(Attempts),
+		retry.Delay(Delay),
+		retry.LastErrorOnly(LastErrorOnly),
+		retry.OnRetry(func(n uint, err error) {
+			log.Printf("Failed to get metadata srce_user. #%d: %s\n", n+1, err)
+		}),
+	)
+	return
 }
 
 // GetConfig get server setting
 func GetConfig() (allowCommands interface{}, commandPath interface{}, mailConfig Subscribe) {
-	allowCommands, err := metadata.Get("srce_command", MetadataConfig)
-	if err != nil {
-		log.Print(err)
-	}
-	commandPath, err = metadata.Get("srce_path", MetadataConfig)
-	if err != nil {
-		log.Print(err)
-	}
+	retry.Do(
+		func() (err error) {
+			allowCommands, err = metadata.Get("srce_command", MetadataConfig)
+			return
+		},
+		retry.Attempts(Attempts),
+		retry.Delay(Delay),
+		retry.LastErrorOnly(LastErrorOnly),
+		retry.OnRetry(func(n uint, err error) {
+			log.Printf("Failed to get metadata srce_command. #%d: %s\n", n+1, err)
+		}),
+	)
+	retry.Do(
+		func() (err error) {
+			commandPath, err = metadata.Get("srce_path", MetadataConfig)
+			return
+		},
+		retry.Attempts(Attempts),
+		retry.Delay(Delay),
+		retry.LastErrorOnly(LastErrorOnly),
+		retry.OnRetry(func(n uint, err error) {
+			log.Printf("Failed to get metadata srce_path. #%d: %s\n", n+1, err)
+		}),
+	)
 
-	srceSubscribe, err := metadata.Get("srce_subscribe", MetadataConfig)
-	if err != nil {
-		log.Print(err)
-	}
+	var srceSubscribe interface{}
+	retry.Do(
+		func() (err error) {
+			srceSubscribe, err = metadata.Get("srce_subscribe", MetadataConfig)
+			return
+		},
+		retry.Attempts(Attempts),
+		retry.Delay(Delay),
+		retry.LastErrorOnly(LastErrorOnly),
+		retry.OnRetry(func(n uint, err error) {
+			log.Printf("Failed to get metadata srce_subscribe. #%d: %s\n", n+1, err)
+		}),
+	)
 	mailConfig = Subscribe{
 		Sender:         srceSubscribe.(map[string]interface{})["sender"].(string),
 		Password:       srceSubscribe.(map[string]interface{})["password"].(string),

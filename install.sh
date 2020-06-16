@@ -13,12 +13,12 @@ installSRCE() {
 }
 
 configSRCE() {
-    read -p 'Please enter metadata server:' server
-    read -p 'Please enter VerifyHeader header:' header
-    read -p 'Please enter VerifyHeader value:' value
-    read -p 'Please enter host(default: 127.0.0.1):' host
+    read -p 'Please enter metadata server: ' server
+    read -p 'Please enter VerifyHeader header: ' header
+    read -p 'Please enter VerifyHeader value: ' value
+    read -p 'Please enter host(default: 127.0.0.1): ' host
     [ -z $host ] && host=127.0.0.1
-    read -p 'Please enter port(default: 12345):' port
+    read -p 'Please enter port(default: 12345): ' port
     [ -z $port ] && port=12345
     sed "s,\$server,$server," /var/www/srce-go/config.ini.default > /var/www/srce-go/config.ini
     sed -i "s/\$header/$header/" /var/www/srce-go/config.ini
