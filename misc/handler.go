@@ -26,7 +26,10 @@ func init() {
 }
 
 func basicAuth(r *http.Request) (bool, string) {
-	allowUsers := GetUsers()
+	allowUsers, err := GetUsers()
+	if err != nil {
+		return false, "Error"
+	}
 	user, password, hasAuth := r.BasicAuth()
 	for k, v := range allowUsers.(map[string]interface{}) {
 		if hasAuth && user == k && password == v {
@@ -43,7 +46,11 @@ func Bash(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if err != nil {
 		log.Print(err)
 	}
-	allowCommands, commandPath, mailConfig := GetConfig()
+	allowCommands, commandPath, mailConfig, err := GetConfig()
+	if err != nil {
+		w.WriteHeader(500)
+		return
+	}
 	var result string
 	switch len(router) {
 	case 1:
@@ -64,9 +71,12 @@ func Bash(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 						log.Print(err)
 					}
 					break
-				} else {
+				} else if user == "" {
 					w.Header().Set("WWW-Authenticate", "Basic realm=Restricted")
 					http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+					return
+				} else {
+					w.WriteHeader(500)
 					return
 				}
 			}
@@ -91,9 +101,12 @@ func Bash(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 								log.Print(err)
 							}
 							break
-						} else {
+						} else if user == "" {
 							w.Header().Set("WWW-Authenticate", "Basic realm=Restricted")
 							http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+							return
+						} else {
+							w.WriteHeader(500)
 							return
 						}
 					}

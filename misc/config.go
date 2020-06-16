@@ -21,14 +21,14 @@ var (
 )
 
 // GetUsers get auth user info
-func GetUsers() (users interface{}) {
-	retry.Do(
+func GetUsers() (users interface{}, err error) {
+	err = retry.Do(
 		func() (err error) {
 			users, err = metadata.Get("srce_user", MetadataConfig)
 			return
 		},
 		retry.Attempts(Attempts),
-		retry.Delay(Delay),
+		retry.Delay(Delay/10),
 		retry.LastErrorOnly(LastErrorOnly),
 		retry.OnRetry(func(n uint, err error) {
 			log.Printf("Failed to get metadata srce_user. #%d: %s\n", n+1, err)
@@ -38,51 +38,61 @@ func GetUsers() (users interface{}) {
 }
 
 // GetConfig get server setting
-func GetConfig() (allowCommands interface{}, commandPath interface{}, mailConfig Subscribe) {
-	retry.Do(
-		func() (err error) {
-			allowCommands, err = metadata.Get("srce_command", MetadataConfig)
-			return
-		},
-		retry.Attempts(Attempts),
-		retry.Delay(Delay),
-		retry.LastErrorOnly(LastErrorOnly),
-		retry.OnRetry(func(n uint, err error) {
-			log.Printf("Failed to get metadata srce_command. #%d: %s\n", n+1, err)
-		}),
-	)
-	retry.Do(
-		func() (err error) {
-			commandPath, err = metadata.Get("srce_path", MetadataConfig)
-			return
-		},
-		retry.Attempts(Attempts),
-		retry.Delay(Delay),
-		retry.LastErrorOnly(LastErrorOnly),
-		retry.OnRetry(func(n uint, err error) {
-			log.Printf("Failed to get metadata srce_path. #%d: %s\n", n+1, err)
-		}),
-	)
+func GetConfig() (allowCommands interface{}, commandPath interface{}, mailConfig Subscribe, err error) {
+	c := make(chan int)
+	go func() {
+		err = retry.Do(
+			func() (err error) {
+				allowCommands, err = metadata.Get("srce_command", MetadataConfig)
+				return
+			},
+			retry.Attempts(Attempts),
+			retry.Delay(Delay/10),
+			retry.LastErrorOnly(LastErrorOnly),
+			retry.OnRetry(func(n uint, err error) {
+				log.Printf("Failed to get metadata srce_command. #%d: %s\n", n+1, err)
+			}),
+		)
+		c <- 1
+	}()
+	go func() {
+		err = retry.Do(
+			func() (err error) {
+				commandPath, err = metadata.Get("srce_path", MetadataConfig)
+				return
+			},
+			retry.Attempts(Attempts),
+			retry.Delay(Delay/10),
+			retry.LastErrorOnly(LastErrorOnly),
+			retry.OnRetry(func(n uint, err error) {
+				log.Printf("Failed to get metadata srce_path. #%d: %s\n", n+1, err)
+			}),
+		)
+		c <- 1
+	}()
 
 	var srceSubscribe interface{}
-	retry.Do(
+	err = retry.Do(
 		func() (err error) {
 			srceSubscribe, err = metadata.Get("srce_subscribe", MetadataConfig)
 			return
 		},
 		retry.Attempts(Attempts),
-		retry.Delay(Delay),
+		retry.Delay(Delay/10),
 		retry.LastErrorOnly(LastErrorOnly),
 		retry.OnRetry(func(n uint, err error) {
 			log.Printf("Failed to get metadata srce_subscribe. #%d: %s\n", n+1, err)
 		}),
 	)
-	mailConfig = Subscribe{
-		Sender:         srceSubscribe.(map[string]interface{})["sender"].(string),
-		Password:       srceSubscribe.(map[string]interface{})["password"].(string),
-		SMTPServer:     srceSubscribe.(map[string]interface{})["smtp_server"].(string),
-		SMTPServerPort: int(srceSubscribe.(map[string]interface{})["smtp_server_port"].(float64)),
-		Subscriber:     srceSubscribe.(map[string]interface{})["subscriber"].(string),
+	if err == nil {
+		mailConfig = Subscribe{
+			Sender:         srceSubscribe.(map[string]interface{})["sender"].(string),
+			Password:       srceSubscribe.(map[string]interface{})["password"].(string),
+			SMTPServer:     srceSubscribe.(map[string]interface{})["smtp_server"].(string),
+			SMTPServerPort: int(srceSubscribe.(map[string]interface{})["smtp_server_port"].(float64)),
+			Subscriber:     srceSubscribe.(map[string]interface{})["subscriber"].(string),
+		}
 	}
+	_, _ = <-c, <-c
 	return
 }
