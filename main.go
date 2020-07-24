@@ -10,8 +10,6 @@ import (
 	"runtime"
 	"syscall"
 
-	"srce-go/misc"
-
 	"github.com/vharitonsky/iniflags"
 )
 
@@ -19,9 +17,9 @@ import (
 const OS = runtime.GOOS
 
 func main() {
-	flag.StringVar(&misc.MetadataConfig.Server, "server", "", "Metadata Server Address")
-	flag.StringVar(&misc.MetadataConfig.VerifyHeader, "header", "", "Verify Header Header Name")
-	flag.StringVar(&misc.MetadataConfig.VerifyValue, "value", "", "Verify Header Value")
+	flag.StringVar(&metadataConfig.Server, "server", "", "Metadata Server Address")
+	flag.StringVar(&metadataConfig.VerifyHeader, "header", "", "Verify Header Header Name")
+	flag.StringVar(&metadataConfig.VerifyValue, "value", "", "Verify Header Value")
 	unix := flag.String("unix", "", "UNIX-domain Socket")
 	host := flag.String("host", "127.0.0.1", "Server Host")
 	port := flag.String("port", "12345", "Server Port")
@@ -38,6 +36,9 @@ func main() {
 		defer f.Close()
 		log.SetOutput(f)
 	}
+
+	router.GET("/bash/*cmd", bash)
+	router.NotFound = http.HandlerFunc(forbidden)
 
 	if *unix != "" && OS == "linux" {
 		if _, err := os.Stat(*unix); err == nil {
@@ -73,9 +74,9 @@ func main() {
 			log.Fatalf("Failed to chmod socket file: %v", err)
 		}
 
-		http.Serve(listener, misc.Router)
+		http.Serve(listener, router)
 		<-idleConnsClosed
 	} else {
-		http.ListenAndServe(*host+":"+*port, misc.Router)
+		http.ListenAndServe(*host+":"+*port, router)
 	}
 }

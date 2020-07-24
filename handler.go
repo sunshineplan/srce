@@ -1,4 +1,4 @@
-package misc
+package main
 
 import (
 	"fmt"
@@ -18,16 +18,10 @@ const (
 	content = "%s\nUser: %s\nIP: %s\n\nCommand: %s"
 )
 
-// Router default router handler
-var Router = httprouter.New()
-
-func init() {
-	Router.GET("/bash/*cmd", Bash)
-	Router.NotFound = http.HandlerFunc(Forbidden)
-}
+var router = httprouter.New()
 
 func basicAuth(r *http.Request) (bool, string) {
-	allowUsers, err := GetUsers()
+	allowUsers, err := getUsers()
 	if err != nil {
 		return false, "Error"
 	}
@@ -40,14 +34,13 @@ func basicAuth(r *http.Request) (bool, string) {
 	return false, ""
 }
 
-// Bash handler
-func Bash(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func bash(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	router := strings.Split(strings.Trim(ps.ByName("cmd"), "/ "), "/")
 	ip, _, err := net.SplitHostPort(r.RemoteAddr)
 	if err != nil {
 		log.Print(err)
 	}
-	allowCommands, commandPath, mailConfig, err := GetConfig()
+	allowCommands, commandPath, mailConfig, err := getConfig()
 	if err != nil {
 		w.WriteHeader(500)
 		return
@@ -60,7 +53,7 @@ func Bash(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 				authed, user := basicAuth(r)
 				if authed {
 					cmd := exec.Command(commandPath + k)
-					result, err = Run(cmd)
+					result, err = run(cmd)
 					if err != nil {
 						result = fmt.Sprintf("Failed:\n\n%s", err)
 					}
@@ -90,7 +83,7 @@ func Bash(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 						authed, user := basicAuth(r)
 						if authed {
 							cmd := exec.Command(commandPath+k, arg.(string))
-							result, err = Run(cmd)
+							result, err = run(cmd)
 							if err != nil {
 								result = fmt.Sprintf("Failed:\n\n%s", err)
 							}
@@ -121,7 +114,6 @@ func Bash(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Write([]byte(result))
 }
 
-// Forbidden all other router
-func Forbidden(w http.ResponseWriter, _ *http.Request) {
+func forbidden(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(403)
 }

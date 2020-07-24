@@ -1,4 +1,4 @@
-package misc
+package main
 
 import (
 	"fmt"
@@ -13,8 +13,7 @@ type result struct {
 	stderr []byte
 }
 
-// Run command and return result
-func Run(cmd *exec.Cmd) (string, error) {
+func run(cmd *exec.Cmd) (string, error) {
 	stdout, _ := cmd.StdoutPipe()
 	stderr, _ := cmd.StderrPipe()
 

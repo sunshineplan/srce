@@ -1,4 +1,4 @@
-package misc
+package main
 
 import (
 	"encoding/json"
@@ -8,12 +8,10 @@ import (
 	"github.com/sunshineplan/utils/mail"
 )
 
-// MetadataConfig is metadata server config
-var MetadataConfig metadata.Config
+var metadataConfig metadata.Config
 
-// GetUsers get auth user info
-func GetUsers() (map[string]interface{}, error) {
-	m, err := metadata.Get("srce_user", &MetadataConfig)
+func getUsers() (map[string]interface{}, error) {
+	m, err := metadata.Get("srce_user", &metadataConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -24,8 +22,7 @@ func GetUsers() (map[string]interface{}, error) {
 	return users.(map[string]interface{}), nil
 }
 
-// GetConfig get server setting
-func GetConfig() (map[string]interface{}, string, mail.Setting, error) {
+func getConfig() (map[string]interface{}, string, mail.Setting, error) {
 	var mailSetting mail.Setting
 	var err error
 	var config = map[string]interface{}{"srce_command": nil, "srce_path": nil, "srce_subscribe": nil}
@@ -36,7 +33,7 @@ func GetConfig() (map[string]interface{}, string, mail.Setting, error) {
 			defer wg.Done()
 			var b []byte
 			var v interface{}
-			b, err = metadata.Get(k, &MetadataConfig)
+			b, err = metadata.Get(k, &metadataConfig)
 			if err != nil {
 				return
 			}
