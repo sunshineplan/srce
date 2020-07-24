@@ -4,8 +4,8 @@ github.com/go-mail/mail v2.3.1+incompatible h1:UzNOn0k5lpfVtO31cK3hn6I4VEVGhe3lX
 github.com/go-mail/mail v2.3.1+incompatible/go.mod h1:VPWjmmNyRsWXQZHVHT3g0YbIINUkSmuKOiLIDkWbL6M=
 github.com/julienschmidt/httprouter v1.3.0 h1:U0609e9tgbseu3rBINet9P48AI/D3oJs4dN7jwJOQ1U=
 github.com/julienschmidt/httprouter v1.3.0/go.mod h1:JR6WtHb+2LUe8TCKY3cZOxFyyO8IZAc4RVcycCCAKdM=
-github.com/sunshineplan/metadata v1.0.3 h1:vPXr1qpf1jtw3JCcY6A3/AmyX6lljt64u0x80Dzcnsk=
-github.com/sunshineplan/metadata v1.0.3/go.mod h1:0MYYxq/eL+DQecrRyVk6YGjwf2DUEbQ96nREGYWojyE=
+github.com/sunshineplan/metadata v0.0.0-20200724054017-258e10d69a66 h1:Im33xfdAOWwb+Kw9xg8smdsXWROQTpb7X7LfaqFawKY=
+github.com/sunshineplan/metadata v0.0.0-20200724054017-258e10d69a66/go.mod h1:0MYYxq/eL+DQecrRyVk6YGjwf2DUEbQ96nREGYWojyE=
 github.com/sunshineplan/utils v0.0.0-20200716090624-b3eb17c23fa0 h1:KUvyvfXYzN/MIURHfBf5wv/OxPaGaKwr68hBbyAke0E=
 github.com/sunshineplan/utils v0.0.0-20200716090624-b3eb17c23fa0/go.mod h1:fJ8/Fjbd50RwQ8/wxBmBgkuDHfcXrCJu6c/iRsgkYok=
 github.com/vharitonsky/iniflags v0.0.0-20180513140207-a33cd0b5f3de h1:fkw+7JkxF3U1GzQoX9h69Wvtvxajo5Rbzy6+YMMzPIg=
