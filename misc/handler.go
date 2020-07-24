@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/sunshineplan/utils/mail"
 )
 
 const (
@@ -31,7 +32,7 @@ func basicAuth(r *http.Request) (bool, string) {
 		return false, "Error"
 	}
 	user, password, hasAuth := r.BasicAuth()
-	for k, v := range allowUsers.(map[string]interface{}) {
+	for k, v := range allowUsers {
 		if hasAuth && user == k && password == v {
 			return true, user
 		}
@@ -54,16 +55,16 @@ func Bash(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	var result string
 	switch len(router) {
 	case 1:
-		for k := range allowCommands.(map[string]interface{}) {
+		for k := range allowCommands {
 			if router[0] == k {
 				authed, user := basicAuth(r)
 				if authed {
-					cmd := exec.Command(commandPath.(string) + k)
+					cmd := exec.Command(commandPath + k)
 					result, err = Run(cmd)
 					if err != nil {
 						result = fmt.Sprintf("Failed:\n\n%s", err)
 					}
-					if err := Mail(
+					if err := mail.SendMail(
 						&mailConfig,
 						fmt.Sprintf(title, time.Now().Format("20060102 15:04:05")),
 						fmt.Sprintf(content, time.Now().Format("2006/01/02-15:04:05"), user, ip, cmd),
@@ -82,18 +83,18 @@ func Bash(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 			}
 		}
 	case 2:
-		for k, v := range allowCommands.(map[string]interface{}) {
+		for k, v := range allowCommands {
 			if router[0] == k {
 				for _, arg := range v.([]interface{}) {
 					if router[1] == arg {
 						authed, user := basicAuth(r)
 						if authed {
-							cmd := exec.Command(commandPath.(string)+k, arg.(string))
+							cmd := exec.Command(commandPath+k, arg.(string))
 							result, err = Run(cmd)
 							if err != nil {
 								result = fmt.Sprintf("Failed:\n\n%s", err)
 							}
-							if err := Mail(
+							if err := mail.SendMail(
 								&mailConfig,
 								fmt.Sprintf(title, time.Now().Format("20060102 15:04:05")),
 								fmt.Sprintf(content, time.Now().Format("2006/01/02-15:04:05"), user, ip, cmd),
@@ -114,13 +115,10 @@ func Bash(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 			}
 		}
 	default:
-		result = ""
-	}
-	if result == "" {
 		w.WriteHeader(403)
-	} else {
-		w.Write([]byte(result))
+		return
 	}
+	w.Write([]byte(result))
 }
 
 // Forbidden all other router
