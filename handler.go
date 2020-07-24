@@ -36,10 +36,7 @@ func basicAuth(r *http.Request) (bool, string) {
 
 func bash(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	router := strings.Split(strings.Trim(ps.ByName("cmd"), "/ "), "/")
-	ip, _, err := net.SplitHostPort(r.RemoteAddr)
-	if err != nil {
-		log.Print(err)
-	}
+	ip := getClientIP(r)
 	allowCommands, commandPath, mailConfig, err := getConfig()
 	if err != nil {
 		w.WriteHeader(500)
@@ -62,7 +59,7 @@ func bash(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 						fmt.Sprintf(title, time.Now().Format("20060102 15:04:05")),
 						fmt.Sprintf(content, time.Now().Format("2006/01/02-15:04:05"), user, ip, cmd),
 					); err != nil {
-						log.Print(err)
+						log.Println(err)
 					}
 					break
 				} else if user == "" {
@@ -92,7 +89,7 @@ func bash(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 								fmt.Sprintf(title, time.Now().Format("20060102 15:04:05")),
 								fmt.Sprintf(content, time.Now().Format("2006/01/02-15:04:05"), user, ip, cmd),
 							); err != nil {
-								log.Print(err)
+								log.Println(err)
 							}
 							break
 						} else if user == "" {
@@ -116,4 +113,19 @@ func bash(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 func forbidden(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(403)
+}
+
+func getClientIP(r *http.Request) string {
+	clientIP := r.Header.Get("X-Forwarded-For")
+	clientIP = strings.TrimSpace(strings.Split(clientIP, ",")[0])
+	if clientIP == "" {
+		clientIP = strings.TrimSpace(r.Header.Get("X-Real-Ip"))
+	}
+	if clientIP != "" {
+		return clientIP
+	}
+	if ip, _, err := net.SplitHostPort(strings.TrimSpace(r.RemoteAddr)); err == nil {
+		return ip
+	}
+	return ""
 }
