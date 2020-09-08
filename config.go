@@ -45,6 +45,7 @@ func getConfig() (command map[string][]string, path string, subscribe mail.Setti
 		done <- json.Unmarshal(b, &subscribe)
 	}()
 	wg.Wait()
+	close(done)
 	for e := range done {
 		if e != nil {
 			err = e
