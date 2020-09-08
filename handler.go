@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/julienschmidt/httprouter"
-	"github.com/sunshineplan/utils/mail"
 )
 
 const (
@@ -54,8 +53,7 @@ func bash(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 					if err != nil {
 						result = fmt.Sprintf("Failed:\n\n%s", err)
 					}
-					if err := mail.SendMail(
-						&mailConfig,
+					if err := mailConfig.Send(
 						fmt.Sprintf(title, time.Now().Format("20060102 15:04:05")),
 						fmt.Sprintf(content, time.Now().Format("2006/01/02-15:04:05"), user, ip, cmd),
 					); err != nil {
@@ -75,17 +73,16 @@ func bash(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	case 2:
 		for k, v := range allowCommands {
 			if router[0] == k {
-				for _, arg := range v.([]interface{}) {
+				for _, arg := range v {
 					if router[1] == arg {
 						authed, user := basicAuth(r)
 						if authed {
-							cmd := exec.Command(commandPath+k, arg.(string))
+							cmd := exec.Command(commandPath+k, arg)
 							result, err = run(cmd)
 							if err != nil {
 								result = fmt.Sprintf("Failed:\n\n%s", err)
 							}
-							if err := mail.SendMail(
-								&mailConfig,
+							if err := mailConfig.Send(
 								fmt.Sprintf(title, time.Now().Format("20060102 15:04:05")),
 								fmt.Sprintf(content, time.Now().Format("2006/01/02-15:04:05"), user, ip, cmd),
 							); err != nil {

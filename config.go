@@ -10,42 +10,46 @@ import (
 
 var metadataConfig metadata.Config
 
-func getUsers() (map[string]interface{}, error) {
-	m, err := metadata.Get("srce_user", &metadataConfig)
+func getUsers() (map[string]string, error) {
+	b, err := metadataConfig.Get("srce_user")
 	if err != nil {
 		return nil, err
 	}
-	var users interface{}
-	if err := json.Unmarshal(m, &users); err != nil {
+	var users map[string]string
+	if err := json.Unmarshal(b, &users); err != nil {
 		return nil, err
 	}
-	return users.(map[string]interface{}), nil
+	return users, nil
 }
 
-func getConfig() (map[string]interface{}, string, mail.Setting, error) {
-	var mailSetting mail.Setting
-	var err error
-	var config = map[string]interface{}{"srce_command": nil, "srce_path": nil, "srce_subscribe": nil}
+func getConfig() (command map[string][]string, path string, subscribe mail.Setting, err error) {
 	var wg sync.WaitGroup
+	done := make(chan error, 3*2)
 	wg.Add(3)
-	for k := range config {
-		go func(k string) {
-			defer wg.Done()
-			var b []byte
-			var v interface{}
-			b, err = metadata.Get(k, &metadataConfig)
-			if err != nil {
-				return
-			}
-			err = json.Unmarshal(b, &v)
-			config[k] = v
-		}(k)
-	}
+	go func() {
+		defer wg.Done()
+		b, err := metadataConfig.Get("srce_command")
+		done <- err
+		done <- json.Unmarshal(b, &command)
+	}()
+	go func() {
+		defer wg.Done()
+		b, err := metadataConfig.Get("srce_path")
+		done <- err
+		done <- json.Unmarshal(b, &path)
+	}()
+	go func() {
+		defer wg.Done()
+		b, err := metadataConfig.Get("srce_subscribe")
+		done <- err
+		done <- json.Unmarshal(b, &subscribe)
+	}()
 	wg.Wait()
-	if err != nil {
-		return nil, "", mailSetting, err
+	for e := range done {
+		if e != nil {
+			err = e
+			return
+		}
 	}
-	jsonbody, _ := json.Marshal(config["srce_subscribe"])
-	json.Unmarshal(jsonbody, &mailSetting)
-	return config["srce_command"].(map[string]interface{}), config["srce_path"].(string), mailSetting, nil
+	return
 }
