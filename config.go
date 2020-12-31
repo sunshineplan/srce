@@ -1,54 +1,44 @@
 package main
 
 import (
-	"encoding/json"
 	"sync"
 
-	"github.com/sunshineplan/metadata"
-	"github.com/sunshineplan/utils/mail"
+	"github.com/sunshineplan/utils/metadata"
 )
 
-var metadataConfig metadata.Config
+var meta metadata.Server
 
-func getUsers() (map[string]string, error) {
-	b, err := metadataConfig.Get("srce_user")
-	if err != nil {
-		return nil, err
-	}
-	var users map[string]string
-	if err := json.Unmarshal(b, &users); err != nil {
-		return nil, err
-	}
-	return users, nil
+var subscribe struct {
+	From, SMTPServer, Password string
+	SMTPServerPort             int
+	To                         []string
 }
 
-func getConfig() (command map[string][]string, path string, subscribe mail.Setting, err error) {
+func getUsers() (users map[string]string, err error) {
+	err = meta.Get("srce_user", &users)
+	return
+}
+
+func getConfig() (command map[string][]string, path string, err error) {
 	var wg sync.WaitGroup
-	done := make(chan error, 3*2)
+	done := make(chan error, 3)
 	wg.Add(3)
 	go func() {
 		defer wg.Done()
-		b, err := metadataConfig.Get("srce_command")
-		done <- err
-		done <- json.Unmarshal(b, &command)
+		done <- meta.Get("srce_command", &command)
 	}()
 	go func() {
 		defer wg.Done()
-		b, err := metadataConfig.Get("srce_path")
-		done <- err
-		done <- json.Unmarshal(b, &path)
+		done <- meta.Get("srce_path", &path)
 	}()
 	go func() {
 		defer wg.Done()
-		b, err := metadataConfig.Get("srce_subscribe")
-		done <- err
-		done <- json.Unmarshal(b, &subscribe)
+		done <- meta.Get("srce_subscribe", &subscribe)
 	}()
 	wg.Wait()
 	close(done)
-	for e := range done {
-		if e != nil {
-			err = e
+	for err = range done {
+		if err != nil {
 			return
 		}
 	}

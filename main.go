@@ -3,80 +3,74 @@ package main
 import (
 	"flag"
 	"log"
-	"net"
-	"net/http"
 	"os"
-	"os/signal"
-	"runtime"
-	"syscall"
+	"path/filepath"
+	"strings"
 
+	"github.com/sunshineplan/utils/httpsvr"
+	"github.com/sunshineplan/utils/service"
 	"github.com/vharitonsky/iniflags"
 )
 
-// OS is the running program's operating system
-const OS = runtime.GOOS
+var server httpsvr.Server
+var logPath string
+
+var svc = service.Service{
+	Name:    "SRCE",
+	Desc:    "Instance to serve Simple Remote Command Execution",
+	Exec:    run,
+	Options: service.Options{Dependencies: []string{"After=network.target"}},
+}
+
+var (
+	joinPath = filepath.Join
+	dir      = filepath.Dir
+)
 
 func main() {
-	flag.StringVar(&metadataConfig.Server, "server", "", "Metadata Server Address")
-	flag.StringVar(&metadataConfig.VerifyHeader, "header", "", "Verify Header Header Name")
-	flag.StringVar(&metadataConfig.VerifyValue, "value", "", "Verify Header Value")
-	unix := flag.String("unix", "", "UNIX-domain Socket")
-	host := flag.String("host", "127.0.0.1", "Server Host")
-	port := flag.String("port", "12345", "Server Port")
-	logPath := flag.String("log", "", "Log Path")
-	iniflags.SetConfigFile("config.ini")
+	self, err := os.Executable()
+	if err != nil {
+		log.Fatalln("Failed to get self path:", err)
+	}
+
+	flag.StringVar(&meta.Addr, "server", "", "Metadata Server Address")
+	flag.StringVar(&meta.Header, "header", "", "Verify Header Header Name")
+	flag.StringVar(&meta.Value, "value", "", "Verify Header Value")
+	flag.StringVar(&server.Unix, "unix", "", "UNIX-domain Socket")
+	flag.StringVar(&server.Host, "host", "127.0.0.1", "Server Host")
+	flag.StringVar(&server.Port, "port", "12345", "Server Port")
+	flag.StringVar(&logPath, "log", "", "Log Path")
+	iniflags.SetConfigFile(joinPath(dir(self), "config.ini"))
 	iniflags.SetAllowMissingConfigFile(true)
 	iniflags.Parse()
 
-	if *logPath != "" {
-		f, err := os.OpenFile(*logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0640)
-		if err != nil {
-			log.Fatalf("Failed to open log file: %v", err)
-		}
-		defer f.Close()
-		log.SetOutput(f)
+	if service.IsWindowsService() {
+		svc.Run(false)
+		return
 	}
 
-	router.GET("/bash/*cmd", bash)
-	router.NotFound = http.HandlerFunc(forbidden)
-
-	if *unix != "" && OS == "linux" {
-		if _, err := os.Stat(*unix); err == nil {
-			err = os.Remove(*unix)
-			if err != nil {
-				log.Fatalf("Failed to remove socket file: %v", err)
-			}
+	switch flag.NArg() {
+	case 0:
+		run()
+	case 1:
+		switch flag.Arg(0) {
+		case "run", "debug":
+			run()
+		case "install":
+			err = svc.Install()
+		case "remove":
+			err = svc.Remove()
+		case "start":
+			err = svc.Start()
+		case "stop":
+			err = svc.Stop()
+		default:
+			log.Fatalln("Unknown argument:", flag.Arg(0))
 		}
-
-		listener, err := net.Listen("unix", *unix)
-		if err != nil {
-			log.Fatalf("Failed to listen socket file: %v", err)
-		}
-
-		idleConnsClosed := make(chan struct{})
-		go func() {
-			quit := make(chan os.Signal, 1)
-			signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-			<-quit
-
-			if err := listener.Close(); err != nil {
-				log.Printf("Failed to close listener: %v", err)
-			}
-			if _, err := os.Stat(*unix); err == nil {
-				if err := os.Remove(*unix); err != nil {
-					log.Printf("Failed to remove socket file: %v", err)
-				}
-			}
-			close(idleConnsClosed)
-		}()
-
-		if err := os.Chmod(*unix, 0666); err != nil {
-			log.Fatalf("Failed to chmod socket file: %v", err)
-		}
-
-		http.Serve(listener, router)
-		<-idleConnsClosed
-	} else {
-		http.ListenAndServe(*host+":"+*port, router)
+	default:
+		log.Fatalln("Unknown arguments:", strings.Join(flag.Args(), " "))
+	}
+	if err != nil {
+		log.Fatalf("failed to %s SRCE: %v", flag.Arg(0), err)
 	}
 }

@@ -1,9 +1,0 @@
-[Unit]
-Description=uWSGI instance to serve Simple Remote Command Execution
-After=network.target
-
-[Service]
-ExecStart=/var/www/srce-go/srce-go -config /var/www/srce-go/config.ini
-
-[Install]
-WantedBy=multi-user.target
