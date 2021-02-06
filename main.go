@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/sunshineplan/service"
 	"github.com/sunshineplan/utils/httpsvr"
-	"github.com/sunshineplan/utils/service"
 	"github.com/vharitonsky/iniflags"
 )
 
@@ -39,10 +39,15 @@ func main() {
 	flag.StringVar(&server.Unix, "unix", "", "UNIX-domain Socket")
 	flag.StringVar(&server.Host, "host", "127.0.0.1", "Server Host")
 	flag.StringVar(&server.Port, "port", "12345", "Server Port")
+	flag.StringVar(&svc.Options.UpdateURL, "update", "", "Update URL")
+	exclude := flag.String("exclude", "", "Exclude Files")
 	flag.StringVar(&logPath, "log", "", "Log Path")
 	iniflags.SetConfigFile(joinPath(dir(self), "config.ini"))
 	iniflags.SetAllowMissingConfigFile(true)
+	iniflags.SetAllowUnknownFlags(true)
 	iniflags.Parse()
+
+	svc.Options.ExcludeFiles = strings.Split(*exclude, ",")
 
 	if service.IsWindowsService() {
 		svc.Run(false)
@@ -64,6 +69,10 @@ func main() {
 			err = svc.Start()
 		case "stop":
 			err = svc.Stop()
+		case "restart":
+			err = svc.Restart()
+		case "update":
+			err = svc.Update()
 		default:
 			log.Fatalln("Unknown argument:", flag.Arg(0))
 		}
@@ -71,6 +80,6 @@ func main() {
 		log.Fatalln("Unknown arguments:", strings.Join(flag.Args(), " "))
 	}
 	if err != nil {
-		log.Fatalf("failed to %s SRCE: %v", flag.Arg(0), err)
+		log.Fatalf("failed to %s: %v", flag.Arg(0), err)
 	}
 }

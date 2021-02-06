@@ -2,15 +2,13 @@
 
 installSoftware() {
     apt -qq -y install nginx
-    apt -qq -y -t $(lsb_release -sc)-backports install golang-go
 }
 
 installSRCE() {
-    curl -Lo- https://github.com/sunshineplan/srce/archive/v1.0.tar.gz | tar zxC /var/www
-    mv /var/www/srce* /var/www/srce
+    mkdir -p /var/www/srce
+    curl -Lo- https://github.com/sunshineplan/srce/releases/download/v1.0/release.tar.gz | tar zxC /var/www/srce
     cd /var/www/srce
-    go build
-    ./srce install
+    chmod +x srce
 }
 
 configSRCE() {
@@ -25,6 +23,8 @@ configSRCE() {
     [ -z $port ] && port=12345
     read -p 'Please enter log path(default: /var/log/app/srce.log): ' log
     [ -z $log ] && log=/var/log/app/srce.log
+    read -p 'Please enter update URL: ' update
+    read -p 'Please enter exclude files: ' exclude
     mkdir -p $(dirname $log)
     sed "s,\$server,$server," /var/www/srce/config.ini.default > /var/www/srce/config.ini
     sed -i "s/\$header/$header/" /var/www/srce/config.ini
@@ -33,6 +33,9 @@ configSRCE() {
     sed -i "s,\$log,$log," /var/www/srce/config.ini
     sed -i "s/\$host/$host/" /var/www/srce/config.ini
     sed -i "s/\$port/$port/" /var/www/srce/config.ini
+    sed -i "s,\$update,$update," /var/www/srce/config.ini
+    sed -i "s|\$exclude|$exclude|" /var/www/srce/config.ini
+    ./srce install || exit 1
     service srce start
 }
 
