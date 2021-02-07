@@ -27,6 +27,7 @@ func run() {
 		ip = getClientIP(r)
 		commands, path, err := getConfig()
 		if err != nil {
+			log.Print(err)
 			w.WriteHeader(500)
 			return
 		}

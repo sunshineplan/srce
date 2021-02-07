@@ -29,7 +29,11 @@ func getConfig() (command map[string][]string, path string, err error) {
 	}()
 	go func() {
 		defer wg.Done()
-		done <- meta.Get("srce_path", &path)
+		var p struct{ Path string }
+		if err := meta.Get("srce_path", &p); err != nil {
+			done <- err
+		}
+		path = p.Path
 	}()
 	go func() {
 		defer wg.Done()
