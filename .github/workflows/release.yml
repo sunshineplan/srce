@@ -1,32 +1,41 @@
 name: Release
 
 on:
+  workflow_dispatch:
   workflow_run:
-    workflows: [ "Test" ]
-    branches: [ main ]
+    workflows: [ Test, Dependabot ]
     types: 
       - completed
 
 jobs:
   release:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: |
+      github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' &&
+        (github.event.workflow_run.name == 'Test' && github.event.workflow_run.head_branch == 'main' ||
+         github.event.workflow_run.name == 'Dependabot')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
 
-      - name: Set up Go
+      - name: Setup Go
         uses: actions/setup-go@v2
         with:
           go-version: '1.x'
 
+      - name: Build
+        id: build
+        run: |
+          go build -ldflags "-s -w"
+          echo "::set-output name=date::$(TZ=PRC date +'%Y-%m-%d')"
+
       - name: Delete Old Release
-        uses: actions/github-script@v3
+        uses: actions/github-script@v5
         with:
           script: |
             let release
             try {
-              release = await github.repos.getReleaseByTag({
+              release = await github.rest.repos.getReleaseByTag({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 tag: 'v1.0'
@@ -36,46 +45,27 @@ jobs:
               return
             }
 
-            await github.repos.deleteRelease({
+            await github.rest.repos.deleteRelease({
               owner: context.repo.owner,
               repo: context.repo.repo,
               release_id: release.data.id
             })
 
-            await github.git.deleteRef({
+            await github.rest.git.deleteRef({
               owner: context.repo.owner,
               repo: context.repo.repo,
               ref: 'tags/v1.0'
             })
 
-      - name: Build
-        id: build
-        run: |
-          go mod download
-          go build -ldflags "-s -w"
-          echo "::set-output name=date::$(TZ=CST date +'%Y-%m-%d')"
+      - name: Pack
+        run: tar cvzf release.tar.gz scripts srce config.ini.default
 
       - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
+        uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: v1.0
-          release_name: ${{ steps.build.outputs.date }}
+          name: ${{ steps.build.outputs.date }}
           body: ${{ steps.build.outputs.date }}
-          draft: false
-          prerelease: false
-
-      - name: Zip release files
-        run: tar cvzf release.tar.gz scripts srce config.ini.default
-
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./release.tar.gz
-          asset_name: release.tar.gz
-          asset_content_type: application/gzip
+          files: release.tar.gz

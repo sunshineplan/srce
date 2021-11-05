@@ -13,31 +13,24 @@ import (
 	"github.com/sunshineplan/utils/mail"
 )
 
-const (
-	title   = "SRCE Notification - %s"
-	content = "%s\nUser: %s\nIP: %s\n\nCommand: %s"
-)
-
 type result struct {
 	err    error
 	stdout []byte
 	stderr []byte
 }
 
-var user, ip string
-
-func basicAuth(r *http.Request) (bool, string) {
+func basicAuth(r *http.Request) (string, bool) {
 	allowUsers, err := getUsers()
 	if err != nil {
-		return false, "Error"
+		return "error", false
 	}
 	user, password, hasAuth := r.BasicAuth()
 	for k, v := range allowUsers {
 		if hasAuth && user == k && password == v {
-			return true, user
+			return user, true
 		}
 	}
-	return false, ""
+	return "", false
 }
 
 func runCmd(cmd *exec.Cmd) (string, error) {
@@ -64,7 +57,12 @@ func runCmd(cmd *exec.Cmd) (string, error) {
 	}
 }
 
-func execute(path, command string, args ...string) string {
+func execute(user, ip, path, command string, args ...string) string {
+	const (
+		title   = "SRCE Notification - %s"
+		content = "%s\nUser: %s\nIP: %s\n\nCommand: %s"
+	)
+
 	cmd := exec.Command(path+command, args...)
 	result, err := runCmd(cmd)
 	if err != nil {
