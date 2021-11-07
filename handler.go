@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -104,7 +105,12 @@ func email(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		if err != nil {
 			filename = "Unknow" + strconv.Itoa(i)
 		}
-		b, err := cipher.Decrypt([]byte(key), []byte(a.D))
+		b, err := base64.StdEncoding.DecodeString(a.D)
+		if err != nil {
+			w.WriteHeader(400)
+			return
+		}
+		b, err = cipher.Decrypt([]byte(key), b)
 		if err != nil {
 			w.WriteHeader(400)
 			return
