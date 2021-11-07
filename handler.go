@@ -115,6 +115,7 @@ func email(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	subscribe, err := getSubscribe()
 	if err != nil {
 		log.Print(err)
+		w.WriteHeader(500)
 		return
 	}
 	if err := (&mail.Dialer{
@@ -130,6 +131,7 @@ func email(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	},
 	); err != nil {
 		log.Println(err)
+		w.WriteHeader(502)
 	} else {
 		log.Printf("SRCE Mail Sent - User: %s, IP: %s, Title: %s", user, ip, title)
 	}
