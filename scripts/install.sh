@@ -6,7 +6,7 @@ installSoftware() {
 
 installSRCE() {
     mkdir -p /var/www/srce
-    curl -Lo- https://github.com/sunshineplan/srce/releases/download/v1.0/release.tar.gz | tar zxC /var/www/srce
+    curl -Lo- https://github.com/sunshineplan/srce/releases/latest/download/release.tar.gz | tar zxC /var/www/srce
     cd /var/www/srce
     chmod +x srce
 }

@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net"
 	"net/http"
@@ -44,8 +44,8 @@ func runCmd(cmd *exec.Cmd) (string, error) {
 	done := make(chan result)
 	go func() {
 		res := new(result)
-		res.stdout, _ = ioutil.ReadAll(stdout)
-		res.stderr, _ = ioutil.ReadAll(stderr)
+		res.stdout, _ = io.ReadAll(stdout)
+		res.stderr, _ = io.ReadAll(stderr)
 		res.err = cmd.Wait()
 		done <- *res
 	}()
@@ -67,6 +67,11 @@ func execute(user, ip, path, command string, args ...string) string {
 	result, err := runCmd(cmd)
 	if err != nil {
 		result = fmt.Sprintf("Failed:\n\n%s", err)
+	}
+	subscribe, err := getSubscribe()
+	if err != nil {
+		log.Print(err)
+		return result
 	}
 	if err := (&mail.Dialer{
 		Host:     subscribe.SMTPServer,

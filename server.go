@@ -29,7 +29,7 @@ func run() {
 	router.GET("/bash/*cmd", func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		router := strings.Split(strings.Trim(ps.ByName("cmd"), "/ "), "/")
 		ip := getClientIP(r)
-		commands, path, err := getConfig()
+		commands, path, err := getBash()
 		if err != nil {
 			log.Print(err)
 			w.WriteHeader(500)
@@ -95,7 +95,7 @@ func run() {
 		}
 		var data struct {
 			T, B string
-			A    []struct{ N, D string }
+			A    []struct{ F, D string }
 		}
 		decoder := json.NewDecoder(r.Body)
 		if err := decoder.Decode(&data); err != nil {
@@ -114,18 +114,23 @@ func run() {
 		}
 		var attachments []*mail.Attachment
 		for i, a := range data.A {
-			name, err := cipher.DecryptText(key, a.N)
+			filename, err := cipher.DecryptText(key, a.F)
 			if err != nil {
-				name = "Unknow" + strconv.Itoa(i)
+				filename = "Unknow" + strconv.Itoa(i)
 			}
-			data, err := cipher.Decrypt([]byte(key), []byte(a.D))
+			b, err := cipher.Decrypt([]byte(key), []byte(a.D))
 			if err != nil {
 				w.WriteHeader(400)
 				return
 			}
-			attachments = append(attachments, &mail.Attachment{Filename: name, Bytes: data})
+			attachments = append(attachments, &mail.Attachment{Filename: filename, Bytes: b})
 		}
 
+		subscribe, err := getSubscribe()
+		if err != nil {
+			log.Print(err)
+			return
+		}
 		if err := (&mail.Dialer{
 			Host:     subscribe.SMTPServer,
 			Port:     subscribe.SMTPServerPort,
@@ -133,12 +138,14 @@ func run() {
 			Password: subscribe.Password,
 		}).Send(&mail.Message{
 			To:          subscribe.To,
-			Subject:     title + " " + ip,
+			Subject:     title,
 			Body:        body,
 			Attachments: attachments,
 		},
 		); err != nil {
 			log.Println(err)
+		} else {
+			log.Printf("SRCE Mail Sent - User: %s, IP: %s, Title: %s", user, ip, title)
 		}
 	})
 
