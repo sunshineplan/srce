@@ -12,7 +12,7 @@ import (
 	"github.com/vharitonsky/iniflags"
 )
 
-var server httpsvr.Server
+var server = httpsvr.New()
 var logPath string
 
 var svc = service.Service{
