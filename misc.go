@@ -81,7 +81,7 @@ func execute(user, ip, path, command string, args ...string) string {
 	}).Send(&mail.Message{
 		To:      subscribe.To,
 		Subject: fmt.Sprintf(title, time.Now().Format("20060102 15:04:05")),
-		Body:    fmt.Sprintf(content, time.Now().Format("2006/01/02-15:04:05"), user, ip, cmd),
+		Body:    fmt.Sprintf(content, time.Now().Format("2006/01/02 - 15:04:05"), user, ip, cmd),
 	},
 	); err != nil {
 		log.Println(err)
