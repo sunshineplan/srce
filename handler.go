@@ -16,7 +16,7 @@ import (
 func bash(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	router := strings.Split(strings.Trim(ps.ByName("cmd"), "/ "), "/")
 	ip := getClientIP(r)
-	commands, path, err := getBash()
+	commands, err := getBash()
 	if err != nil {
 		log.Print(err)
 		w.WriteHeader(500)
@@ -27,11 +27,11 @@ func bash(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	var ok bool
 	switch len(router) {
 	case 1:
-		for k := range commands {
+		for k, v := range commands {
 			if router[0] == k {
 				user, ok = basicAuth(r)
 				if ok {
-					result := execute(user, ip, path, router[0])
+					result := execute(user, ip, v.Path, router[0])
 					w.Write([]byte(result))
 					return
 				}
@@ -40,11 +40,11 @@ func bash(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	case 2:
 		for k, v := range commands {
 			if router[0] == k {
-				for _, arg := range v {
+				for _, arg := range v.Args {
 					if router[1] == arg {
 						user, ok = basicAuth(r)
 						if ok {
-							result := execute(user, ip, path, router[0], router[1])
+							result := execute(user, ip, v.Path, router[0], router[1])
 							w.Write([]byte(result))
 							return
 						}
