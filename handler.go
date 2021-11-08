@@ -86,6 +86,7 @@ func email(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	}
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&data); err != nil {
+		log.Print(err)
 		w.WriteHeader(400)
 		return
 	}
@@ -93,10 +94,12 @@ func email(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	key := r.Header.Get("x-key")
 	title, err := cipher.DecryptText(key, data.T)
 	if err != nil {
+		log.Print(err)
 		title = "Unknow"
 	}
 	body, err := cipher.DecryptText(key, data.B)
 	if err != nil {
+		log.Print(err)
 		body = "Unknow"
 	}
 	var attachments []*mail.Attachment
@@ -107,11 +110,13 @@ func email(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		}
 		b, err := base64.StdEncoding.DecodeString(a.D)
 		if err != nil {
+			log.Print(err)
 			w.WriteHeader(400)
 			return
 		}
 		b, err = cipher.Decrypt([]byte(key), b)
 		if err != nil {
+			log.Print(err)
 			w.WriteHeader(400)
 			return
 		}
