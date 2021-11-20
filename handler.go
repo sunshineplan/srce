@@ -13,73 +13,75 @@ import (
 	"github.com/sunshineplan/utils/mail"
 )
 
-func bash(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	router := strings.Split(strings.Trim(ps.ByName("cmd"), "/ "), "/")
-	ip := getClientIP(r)
-	commands, err := getBash()
+func shell(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	user, ip, ok := auth(w, r)
+	if !ok {
+		return
+	}
+
+	cmd, err := parseCmd(ps.ByName("cmd"))
+	if err != nil {
+		log.Print(err)
+		w.WriteHeader(400)
+		return
+	}
+
+	result := execute(user, ip, "", cmd[0], cmd[1:]...)
+	w.Write([]byte(result))
+}
+
+func cmd(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	user, ip, ok := auth(w, r)
+	if !ok {
+		return
+	}
+
+	cmd, err := parseCmd(ps.ByName("cmd"))
+	if err != nil {
+		log.Print(err)
+		w.WriteHeader(400)
+		return
+	}
+
+	commands, err := getCmd()
 	if err != nil {
 		log.Print(err)
 		w.WriteHeader(500)
 		return
 	}
 
-	var user string
-	var ok bool
-	switch len(router) {
+	switch len(cmd) {
 	case 1:
 		for k, v := range commands {
-			if router[0] == k {
-				user, ok = basicAuth(r)
-				if ok {
-					result := execute(user, ip, v.Path, router[0])
-					w.Write([]byte(result))
-					return
-				}
+			if cmd[0] == k {
+				result := execute(user, ip, v.Path, cmd[0])
+				w.Write([]byte(result))
+				return
 			}
 		}
 	case 2:
 		for k, v := range commands {
-			if router[0] == k {
+			if cmd[0] == k {
 				for _, arg := range v.Args {
-					if router[1] == arg {
-						user, ok = basicAuth(r)
-						if ok {
-							result := execute(user, ip, v.Path, router[0], router[1])
-							w.Write([]byte(result))
-							return
-						}
+					if cmd[1] == arg {
+						result := execute(user, ip, v.Path, cmd[0], cmd[1])
+						w.Write([]byte(result))
+						return
 					}
 				}
 			}
 		}
 	default:
-		w.WriteHeader(403)
-		return
+		w.WriteHeader(400)
 	}
-	if user == "" {
-		w.Header().Set("WWW-Authenticate", "Basic realm=SRCE")
-		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
-		return
-	}
-	w.WriteHeader(500)
 }
 
 func email(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	ip := getClientIP(r)
-	user, ok := basicAuth(r)
+	user, ip, ok := auth(w, r)
 	if !ok {
-		if user == "" {
-			w.Header().Set("WWW-Authenticate", "Basic realm=SRCE")
-			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
-			return
-		}
-		w.WriteHeader(500)
 		return
 	}
-	if r == nil {
-		w.WriteHeader(500)
-		return
-	}
+
 	var data struct {
 		T, B string
 		A    []struct{ F, D string }

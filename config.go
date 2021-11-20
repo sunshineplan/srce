@@ -22,7 +22,7 @@ func getUsers() (users map[string]string, err error) {
 	return
 }
 
-func getBash() (commands map[string]command, err error) {
+func getCmd() (commands map[string]command, err error) {
 	err = meta.Get("srce_command", &commands)
 	return
 }

@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"net/url"
 	"os/exec"
 	"strings"
 	"time"
@@ -31,6 +32,32 @@ func basicAuth(r *http.Request) (string, bool) {
 		}
 	}
 	return "", false
+}
+
+func auth(w http.ResponseWriter, r *http.Request) (user, ip string, ok bool) {
+	ip = getClientIP(r)
+	user, ok = basicAuth(r)
+	if !ok {
+		if user == "" {
+			w.Header().Set("WWW-Authenticate", "Basic realm=SRCE")
+			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+			return
+		}
+		w.WriteHeader(500)
+	}
+	return
+}
+
+func parseCmd(s string) (res []string, err error) {
+	cmd := strings.Trim(s, "/ ")
+	for _, i := range strings.Split(cmd, "/") {
+		s, err = url.QueryUnescape(i)
+		if err != nil {
+			return
+		}
+		res = append(res, strings.Split(strings.TrimSpace(s), " ")...)
+	}
+	return
 }
 
 func runCmd(cmd *exec.Cmd) (string, error) {

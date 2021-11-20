@@ -13,8 +13,6 @@ import (
 )
 
 var server = httpsvr.New()
-var logPath string
-
 var svc = service.Service{
 	Name:    "SRCE",
 	Desc:    "Instance to serve Simple Remote Command Execution",
@@ -25,6 +23,11 @@ var svc = service.Service{
 var (
 	joinPath = filepath.Join
 	dir      = filepath.Dir
+)
+
+var (
+	exclude = flag.String("exclude", "", "Exclude Files")
+	logPath = flag.String("log", "", "Log Path")
 )
 
 func main() {
@@ -40,8 +43,6 @@ func main() {
 	flag.StringVar(&server.Host, "host", "127.0.0.1", "Server Host")
 	flag.StringVar(&server.Port, "port", "12345", "Server Port")
 	flag.StringVar(&svc.Options.UpdateURL, "update", "", "Update URL")
-	exclude := flag.String("exclude", "", "Exclude Files")
-	flag.StringVar(&logPath, "log", "", "Log Path")
 	iniflags.SetConfigFile(joinPath(dir(self), "config.ini"))
 	iniflags.SetAllowMissingConfigFile(true)
 	iniflags.SetAllowUnknownFlags(true)

@@ -9,8 +9,8 @@ import (
 )
 
 func run() {
-	if logPath != "" {
-		f, err := os.OpenFile(logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0640)
+	if *logPath != "" {
+		f, err := os.OpenFile(*logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0640)
 		if err != nil {
 			log.Fatalf("Failed to open log file: %v", err)
 		}
@@ -21,7 +21,8 @@ func run() {
 	router := httprouter.New()
 	server.Handler = router
 
-	router.GET("/bash/*cmd", bash)
+	router.GET("/shell/*cmd", shell)
+	router.GET("/cmd/*cmd", cmd)
 	router.POST("/mail", email)
 	router.POST("/crypto", crypto)
 
