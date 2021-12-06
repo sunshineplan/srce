@@ -48,14 +48,15 @@ func auth(w http.ResponseWriter, r *http.Request) (user, ip string, ok bool) {
 	return
 }
 
-func parseCmd(s string) (res []string, err error) {
-	cmd := strings.Trim(s, "/ ")
-	for _, i := range strings.Split(cmd, "/") {
-		s, err = url.QueryUnescape(i)
-		if err != nil {
-			return
-		}
-		res = append(res, strings.Split(strings.TrimSpace(s), " ")...)
+func parseCmd(cmd string) (res []string, err error) {
+	cmd, err = url.QueryUnescape(strings.Trim(cmd, "/ "))
+	if err != nil {
+		return
+	}
+	cmd = strings.ReplaceAll(cmd, "_", " ")
+
+	for _, s := range strings.Split(cmd, "/") {
+		res = append(res, strings.Fields(strings.ReplaceAll(s, "~", "/"))...)
 	}
 	return
 }

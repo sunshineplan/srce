@@ -15,7 +15,7 @@ func TestParseCmd(t *testing.T) {
 			[]string{"service", "srce", "start"},
 		},
 		{
-			"/service+srce+start",
+			"/service+srce_start",
 			[]string{"service", "srce", "start"},
 		},
 		{
@@ -23,7 +23,7 @@ func TestParseCmd(t *testing.T) {
 			[]string{"service", "srce", "start"},
 		},
 		{
-			"/%2Fbin%2Fbash",
+			"/~bin~bash",
 			[]string{"/bin/bash"},
 		},
 	}
