@@ -14,7 +14,7 @@ import (
 )
 
 func shell(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	user, ip, ok := auth(w, r)
+	user, ip, admin, ok := auth(w, r)
 	if !ok {
 		return
 	}
@@ -26,12 +26,18 @@ func shell(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		return
 	}
 
+	if !admin {
+		log.Printf("%s has no permission to run shell: %s", user, cmd)
+		w.WriteHeader(403)
+		return
+	}
+
 	result := execute(user, ip, "", cmd[0], cmd[1:]...)
 	w.Write([]byte(result))
 }
 
 func cmd(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	user, ip, ok := auth(w, r)
+	user, ip, _, ok := auth(w, r)
 	if !ok {
 		return
 	}
@@ -77,7 +83,7 @@ func cmd(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 }
 
 func email(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	user, ip, ok := auth(w, r)
+	user, ip, _, ok := auth(w, r)
 	if !ok {
 		return
 	}

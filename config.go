@@ -17,7 +17,12 @@ type command struct {
 	Args []string
 }
 
-func getUsers() (users map[string]string, err error) {
+type info struct {
+	Password string
+	Admin    bool
+}
+
+func getUsers() (users map[string]info, err error) {
 	err = meta.Get("srce_user", &users)
 	return
 }

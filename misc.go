@@ -20,23 +20,23 @@ type result struct {
 	stderr []byte
 }
 
-func basicAuth(r *http.Request) (string, bool) {
+func basicAuth(r *http.Request) (string, bool, bool) {
 	allowUsers, err := getUsers()
 	if err != nil {
-		return "error", false
+		return "error", false, false
 	}
 	user, password, hasAuth := r.BasicAuth()
-	for k, v := range allowUsers {
-		if hasAuth && user == k && password == v {
-			return user, true
+	for name, info := range allowUsers {
+		if hasAuth && user == name && password == info.Password {
+			return user, info.Admin, true
 		}
 	}
-	return "", false
+	return "", false, false
 }
 
-func auth(w http.ResponseWriter, r *http.Request) (user, ip string, ok bool) {
+func auth(w http.ResponseWriter, r *http.Request) (user, ip string, admin, ok bool) {
 	ip = getClientIP(r)
-	user, ok = basicAuth(r)
+	user, admin, ok = basicAuth(r)
 	if !ok {
 		if user == "" {
 			w.Header().Set("WWW-Authenticate", "Basic realm=SRCE")
