@@ -96,22 +96,16 @@ func execute(user, ip, path, command string, args ...string) string {
 	if err != nil {
 		result = fmt.Sprintf("Failed:\n\n%s", err)
 	}
-	subscribe, err := getSubscribe()
+	dialer, to, err := getSubscribe()
 	if err != nil {
 		log.Print(err)
 		return result
 	}
-	if err := (&mail.Dialer{
-		Host:     subscribe.SMTPServer,
-		Port:     subscribe.SMTPServerPort,
-		Account:  subscribe.From,
-		Password: subscribe.Password,
-	}).Send(&mail.Message{
-		To:      subscribe.To,
+	if err := dialer.Send(&mail.Message{
+		To:      to,
 		Subject: fmt.Sprintf(title, time.Now().Format("20060102 15:04:05")),
 		Body:    fmt.Sprintf(content, time.Now().Format("2006/01/02 - 15:04:05"), user, ip, cmd),
-	},
-	); err != nil {
+	}); err != nil {
 		log.Println(err)
 	}
 	return result

@@ -131,24 +131,18 @@ func email(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		attachments = append(attachments, &mail.Attachment{Filename: filename, Bytes: b})
 	}
 
-	subscribe, err := getSubscribe()
+	dialer, to, err := getSubscribe()
 	if err != nil {
 		log.Print(err)
 		w.WriteHeader(500)
 		return
 	}
-	if err := (&mail.Dialer{
-		Host:     subscribe.SMTPServer,
-		Port:     subscribe.SMTPServerPort,
-		Account:  subscribe.From,
-		Password: subscribe.Password,
-	}).Send(&mail.Message{
-		To:          subscribe.To,
+	if err := dialer.Send(&mail.Message{
+		To:          to,
 		Subject:     title,
 		Body:        body,
 		Attachments: attachments,
-	},
-	); err != nil {
+	}); err != nil {
 		log.Println(err)
 		w.WriteHeader(502)
 	} else {

@@ -1,16 +1,11 @@
 package main
 
 import (
+	"github.com/sunshineplan/utils/mail"
 	"github.com/sunshineplan/utils/metadata"
 )
 
 var meta metadata.Server
-
-type subscribe struct {
-	From, SMTPServer, Password string
-	SMTPServerPort             int
-	To                         []string
-}
 
 type command struct {
 	Path string
@@ -32,7 +27,20 @@ func getCmd() (commands map[string]command, err error) {
 	return
 }
 
-func getSubscribe() (subscribe subscribe, err error) {
-	err = meta.Get("srce_subscribe", &subscribe)
-	return
+func getSubscribe() (*mail.Dialer, []string, error) {
+	var subscribe struct {
+		From, SMTPServer, Password string
+		SMTPServerPort             int
+		To                         []string
+	}
+	if err := meta.Get("srce_subscribe", &subscribe); err != nil {
+		return nil, nil, err
+	}
+
+	return &mail.Dialer{
+		Server:   subscribe.SMTPServer,
+		Port:     subscribe.SMTPServerPort,
+		Account:  subscribe.From,
+		Password: subscribe.Password,
+	}, subscribe.To, nil
 }
