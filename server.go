@@ -6,7 +6,10 @@ import (
 	"os"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/sunshineplan/utils/httpsvr"
 )
+
+var server = httpsvr.New()
 
 func run() {
 	if *logPath != "" {

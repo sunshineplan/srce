@@ -85,30 +85,30 @@ func runCmd(cmd *exec.Cmd) (string, error) {
 	}
 }
 
-func execute(user, ip, path, command string, args ...string) string {
+func execute(user, ip, path, command string, args ...string) (res string) {
 	const (
 		title   = "SRCE Notification - %s"
 		content = "%s\nUser: %s\nIP: %s\n\nCommand: %s"
 	)
 
 	cmd := exec.Command(path+command, args...)
-	result, err := runCmd(cmd)
+	res, err := runCmd(cmd)
 	if err != nil {
-		result = fmt.Sprintf("Failed:\n\n%s", err)
+		res = fmt.Sprintf("Failed:\n\n%s", err)
 	}
 	dialer, to, err := getSubscribe()
 	if err != nil {
 		log.Print(err)
-		return result
+		return
 	}
 	if err := dialer.Send(&mail.Message{
 		To:      to,
 		Subject: fmt.Sprintf(title, time.Now().Format("20060102 15:04:05")),
 		Body:    fmt.Sprintf(content, time.Now().Format("2006/01/02 - 15:04:05"), user, ip, cmd),
 	}); err != nil {
-		log.Println(err)
+		log.Print(err)
 	}
-	return result
+	return
 }
 
 func getClientIP(r *http.Request) string {

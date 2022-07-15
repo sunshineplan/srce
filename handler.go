@@ -92,14 +92,13 @@ func email(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		T, B string
 		A    []struct{ F, D string }
 	}
-	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(&data); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
 		log.Print(err)
 		w.WriteHeader(400)
 		return
 	}
 
-	key := r.Header.Get("x-key")
+	key := r.Header.Get("X-Key")
 	title, err := cipher.DecryptText(key, data.T)
 	if err != nil {
 		log.Print(err)
@@ -143,7 +142,7 @@ func email(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		Body:        body,
 		Attachments: attachments,
 	}); err != nil {
-		log.Println(err)
+		log.Print(err)
 		w.WriteHeader(502)
 	} else {
 		log.Printf("SRCE Mail Sent - User: %s, IP: %s, Title: %s", user, ip, title)
@@ -151,23 +150,21 @@ func email(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 }
 
 func crypto(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	type M map[string]interface{}
-	mode := r.FormValue("mode")
 	key := r.FormValue("key")
 	content := r.FormValue("content")
-	switch mode {
+	switch r.FormValue("mode") {
 	case "encrypt":
 		w.Header().Set("Content-Type", "application/json")
-		data, _ := json.Marshal(M{"result": cipher.EncryptText(key, content)})
+		data, _ := json.Marshal(map[string]any{"result": cipher.EncryptText(key, content)})
 		w.Write(data)
 	case "decrypt":
 		w.Header().Set("Content-Type", "application/json")
 		result, err := cipher.DecryptText(key, strings.TrimSpace(content))
 		var data []byte
 		if err != nil {
-			data, _ = json.Marshal(M{"result": nil})
+			data, _ = json.Marshal(map[string]any{"result": nil})
 		} else {
-			data, _ = json.Marshal(M{"result": result})
+			data, _ = json.Marshal(map[string]any{"result": result})
 		}
 		w.Write(data)
 	default:

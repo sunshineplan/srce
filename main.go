@@ -8,22 +8,15 @@ import (
 	"strings"
 
 	"github.com/sunshineplan/service"
-	"github.com/sunshineplan/utils/httpsvr"
 	"github.com/vharitonsky/iniflags"
 )
 
-var server = httpsvr.New()
 var svc = service.Service{
 	Name:    "SRCE",
 	Desc:    "Instance to serve Simple Remote Command Execution",
 	Exec:    run,
 	Options: service.Options{Dependencies: []string{"After=network.target"}},
 }
-
-var (
-	joinPath = filepath.Join
-	dir      = filepath.Dir
-)
 
 var (
 	exclude = flag.String("exclude", "", "Exclude Files")
@@ -43,7 +36,7 @@ func main() {
 	flag.StringVar(&server.Host, "host", "127.0.0.1", "Server Host")
 	flag.StringVar(&server.Port, "port", "12345", "Server Port")
 	flag.StringVar(&svc.Options.UpdateURL, "update", "", "Update URL")
-	iniflags.SetConfigFile(joinPath(dir(self), "config.ini"))
+	iniflags.SetConfigFile(filepath.Join(filepath.Dir(self), "config.ini"))
 	iniflags.SetAllowMissingConfigFile(true)
 	iniflags.SetAllowUnknownFlags(true)
 	iniflags.Parse()
