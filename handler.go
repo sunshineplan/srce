@@ -89,8 +89,8 @@ func email(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	}
 
 	var data struct {
-		T, B string
-		A    []struct{ F, D string }
+		S, B, T string
+		A       []struct{ F, D string }
 	}
 	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
 		log.Print(err)
@@ -99,15 +99,23 @@ func email(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	}
 
 	key := r.Header.Get("X-Key")
-	title, err := cipher.DecryptText(key, data.T)
+	subject, err := cipher.DecryptText(key, data.S)
 	if err != nil {
 		log.Print(err)
-		title = "Unknow"
+		subject = "Unknow"
 	}
 	body, err := cipher.DecryptText(key, data.B)
 	if err != nil {
 		log.Print(err)
 		body = "Unknow"
+	}
+	var to []string
+	if data.T != "" {
+		toStr, err := cipher.DecryptText(key, data.T)
+		if err != nil {
+			log.Print(err)
+		}
+		to = strings.Split(toStr, ",")
 	}
 	var attachments []*mail.Attachment
 	for i, a := range data.A {
@@ -130,22 +138,25 @@ func email(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		attachments = append(attachments, &mail.Attachment{Filename: filename, Bytes: b})
 	}
 
-	dialer, to, err := getSubscribe()
+	dialer, subscriber, err := getSubscribe()
 	if err != nil {
 		log.Print(err)
 		w.WriteHeader(500)
 		return
 	}
+	if len(to) == 0 {
+		to = subscriber
+	}
 	if err := dialer.Send(&mail.Message{
 		To:          to,
-		Subject:     title,
+		Subject:     subject,
 		Body:        body,
 		Attachments: attachments,
 	}); err != nil {
 		log.Print(err)
 		w.WriteHeader(502)
 	} else {
-		log.Printf("SRCE Mail Sent - User: %s, IP: %s, Title: %s", user, ip, title)
+		log.Printf("SRCE Mail Sent - User: %s, IP: %s, Subject: %s, To: %s", user, ip, subject, strings.Join(to, ","))
 	}
 }
 
