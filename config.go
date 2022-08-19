@@ -1,8 +1,8 @@
 package main
 
 import (
+	"github.com/sunshineplan/metadata"
 	"github.com/sunshineplan/utils/mail"
-	"github.com/sunshineplan/utils/metadata"
 )
 
 var meta metadata.Server
