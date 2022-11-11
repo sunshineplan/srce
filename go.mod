@@ -1,6 +1,6 @@
 module srce
 
-go 1.18
+go 1.19
 
 require (
 	github.com/julienschmidt/httprouter v1.3.0
@@ -13,6 +13,6 @@ require (
 
 require (
 	github.com/pschlump/AesCCM v0.0.0-20160925022350-c5df73b5834e // indirect
-	golang.org/x/crypto v0.0.0-20220817201139-bc19a97f63c8 // indirect
-	golang.org/x/sys v0.0.0-20220825204002-c680a09ffe64 // indirect
+	golang.org/x/crypto v0.2.0 // indirect
+	golang.org/x/sys v0.2.0 // indirect
 )
