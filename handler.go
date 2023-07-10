@@ -109,13 +109,18 @@ func email(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		log.Print(err)
 		body = "Unknow"
 	}
-	var to []string
+	var to mail.Receipts
 	if data.T != "" {
 		toStr, err := cipher.DecryptText(key, data.T)
 		if err != nil {
 			log.Print(err)
 		}
-		to = strings.Split(toStr, ",")
+		to, err = mail.ParseReceipts(toStr)
+		if err != nil {
+			log.Print(err)
+			w.WriteHeader(400)
+			return
+		}
 	}
 	var attachments []*mail.Attachment
 	for i, a := range data.A {
@@ -156,7 +161,7 @@ func email(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		log.Print(err)
 		w.WriteHeader(502)
 	} else {
-		log.Printf("SRCE Mail Sent - User: %s, IP: %s, Subject: %s, To: %s", user, ip, subject, strings.Join(to, ","))
+		log.Printf("SRCE Mail Sent - User: %s, IP: %s, Subject: %s, To: %s", user, ip, subject, to)
 	}
 }
 

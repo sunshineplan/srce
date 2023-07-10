@@ -27,11 +27,11 @@ func getCmd() (commands map[string]command, err error) {
 	return
 }
 
-func getSubscribe() (*mail.Dialer, []string, error) {
+func getSubscribe() (*mail.Dialer, mail.Receipts, error) {
 	var subscribe struct {
 		From, SMTPServer, Password string
 		SMTPServerPort             int
-		To                         []string
+		To                         mail.Receipts
 	}
 	if err := meta.Get("srce_subscribe", &subscribe); err != nil {
 		return nil, nil, err

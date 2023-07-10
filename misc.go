@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"io"
-	"log"
 	"net"
 	"net/http"
 	"net/url"
@@ -98,7 +97,7 @@ func execute(user, ip, path, command string, args ...string) (res string) {
 	}
 	dialer, to, err := getSubscribe()
 	if err != nil {
-		log.Print(err)
+		svc.Print(err)
 		return
 	}
 	if err := dialer.Send(&mail.Message{
@@ -106,7 +105,7 @@ func execute(user, ip, path, command string, args ...string) (res string) {
 		Subject: fmt.Sprintf(subject, time.Now().Format("20060102 15:04:05")),
 		Body:    fmt.Sprintf(body, time.Now().Format("2006/01/02 - 15:04:05"), user, ip, cmd),
 	}); err != nil {
-		log.Print(err)
+		svc.Print(err)
 	}
 	return
 }

@@ -1,24 +1,18 @@
 package main
 
 import (
-	"log"
 	"net/http"
-	"os"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/sunshineplan/utils/httpsvr"
+	"github.com/sunshineplan/utils/log"
 )
 
 var server = httpsvr.New()
 
-func run() {
+func run() error {
 	if *logPath != "" {
-		f, err := os.OpenFile(*logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0640)
-		if err != nil {
-			log.Fatalf("Failed to open log file: %v", err)
-		}
-		defer f.Close()
-		log.SetOutput(f)
+		svc.Logger = log.New(*logPath, "", log.LstdFlags)
 	}
 
 	router := httprouter.New()
@@ -33,7 +27,5 @@ func run() {
 		w.WriteHeader(403)
 	})
 
-	if err := server.Run(); err != nil {
-		log.Fatal(err)
-	}
+	return server.Run()
 }
