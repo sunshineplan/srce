@@ -6,7 +6,7 @@ require (
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/sunshineplan/cipher v1.0.7
 	github.com/sunshineplan/metadata v1.1.1
-	github.com/sunshineplan/service v1.0.19
+	github.com/sunshineplan/service v1.0.20
 	github.com/sunshineplan/utils v0.1.66
 )
 
@@ -15,5 +15,5 @@ require (
 	github.com/pschlump/MiscLib v1.0.3 // indirect
 	github.com/pschlump/json v1.12.0 // indirect
 	golang.org/x/crypto v0.17.0 // indirect
-	golang.org/x/sys v0.15.0 // indirect
+	golang.org/x/sys v0.20.0 // indirect
 )
