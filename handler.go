@@ -3,8 +3,8 @@ package main
 import (
 	"encoding/base64"
 	"encoding/json"
-	"log"
 	"net/http"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -21,13 +21,13 @@ func shell(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 	cmd, err := parseCmd(ps.ByName("cmd"))
 	if err != nil {
-		log.Print(err)
+		svc.Print(err)
 		w.WriteHeader(400)
 		return
 	}
 
 	if !admin {
-		log.Printf("%s has no permission to run shell: %s", user, cmd)
+		svc.Printf("%s has no permission to run shell: %s", user, cmd)
 		w.WriteHeader(403)
 		return
 	}
@@ -44,14 +44,14 @@ func cmd(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 	cmd, err := parseCmd(ps.ByName("cmd"))
 	if err != nil {
-		log.Print(err)
+		svc.Print(err)
 		w.WriteHeader(400)
 		return
 	}
 
 	commands, err := getCmd()
 	if err != nil {
-		log.Print(err)
+		svc.Print(err)
 		w.WriteHeader(500)
 		return
 	}
@@ -82,6 +82,32 @@ func cmd(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	}
 }
 
+func upload(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	user, ip, admin, ok := auth(w, r)
+	if !ok {
+		return
+	} else if !admin {
+		svc.Printf("%s has no permission to upload file", user)
+		w.WriteHeader(403)
+		return
+	}
+
+	if err := r.ParseMultipartForm(*maxMemory << 20); err != nil {
+		svc.Print(err)
+		w.WriteHeader(500)
+		return
+	}
+
+	for _, file := range r.MultipartForm.File["file"] {
+		if err := saveUploadedFile(file, filepath.Base(file.Filename)); err != nil {
+			svc.Print(err)
+			w.WriteHeader(500)
+			return
+		}
+		svc.Printf("SRCE Upload - User: %s, IP: %s, File: %s", user, ip, file.Filename)
+	}
+}
+
 func email(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	user, ip, _, ok := auth(w, r)
 	if !ok {
@@ -93,7 +119,7 @@ func email(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		A       []struct{ F, D string }
 	}
 	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
-		log.Print(err)
+		svc.Print(err)
 		w.WriteHeader(400)
 		return
 	}
@@ -101,23 +127,23 @@ func email(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	key := r.Header.Get("X-Key")
 	subject, err := cipher.DecryptText(key, data.S)
 	if err != nil {
-		log.Print(err)
+		svc.Print(err)
 		subject = "Unknow"
 	}
 	body, err := cipher.DecryptText(key, data.B)
 	if err != nil {
-		log.Print(err)
+		svc.Print(err)
 		body = "Unknow"
 	}
 	var to mail.Receipts
 	if data.T != "" {
 		toStr, err := cipher.DecryptText(key, data.T)
 		if err != nil {
-			log.Print(err)
+			svc.Print(err)
 		}
 		to, err = mail.ParseReceipts(toStr)
 		if err != nil {
-			log.Print(err)
+			svc.Print(err)
 			w.WriteHeader(400)
 			return
 		}
@@ -130,13 +156,13 @@ func email(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		}
 		b, err := base64.StdEncoding.DecodeString(a.D)
 		if err != nil {
-			log.Print(err)
+			svc.Print(err)
 			w.WriteHeader(400)
 			return
 		}
 		b, err = cipher.Decrypt([]byte(key), b)
 		if err != nil {
-			log.Print(err)
+			svc.Print(err)
 			w.WriteHeader(400)
 			return
 		}
@@ -145,7 +171,7 @@ func email(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 	dialer, subscriber, err := getSubscribe()
 	if err != nil {
-		log.Print(err)
+		svc.Print(err)
 		w.WriteHeader(500)
 		return
 	}
@@ -158,10 +184,10 @@ func email(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		Body:        body,
 		Attachments: attachments,
 	}); err != nil {
-		log.Print(err)
+		svc.Print(err)
 		w.WriteHeader(502)
 	} else {
-		log.Printf("SRCE Mail Sent - User: %s, IP: %s, Subject: %s, To: %s", user, ip, subject, to)
+		svc.Printf("SRCE Mail Sent - User: %s, IP: %s, Subject: %s, To: %s", user, ip, subject, to)
 	}
 }
 

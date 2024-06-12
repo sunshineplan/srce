@@ -3,10 +3,13 @@ package main
 import (
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net"
 	"net/http"
 	"net/url"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -108,6 +111,23 @@ func execute(user, ip, path, command string, args ...string) (res string) {
 		svc.Print(err)
 	}
 	return
+}
+
+func saveUploadedFile(file *multipart.FileHeader, dst string) error {
+	src, err := file.Open()
+	if err != nil {
+		return err
+	}
+	defer src.Close()
+
+	out, err := os.Create(filepath.Join(*uploadPath, dst))
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	_, err = io.Copy(out, src)
+	return err
 }
 
 func getClientIP(r *http.Request) string {

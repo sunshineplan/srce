@@ -2,17 +2,17 @@ package main
 
 import (
 	"net/http"
+	"os"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/sunshineplan/utils/httpsvr"
-	"github.com/sunshineplan/utils/log"
 )
 
 var server = httpsvr.New()
 
 func run() error {
-	if *logPath != "" {
-		svc.Logger = log.New(*logPath, "", log.LstdFlags)
+	if err := os.MkdirAll(*uploadPath, 0750); err != nil {
+		return err
 	}
 
 	router := httprouter.New()
@@ -20,12 +20,11 @@ func run() error {
 
 	router.GET("/shell/*cmd", shell)
 	router.GET("/cmd/*cmd", cmd)
+	router.POST("/upload", upload)
 	router.POST("/mail", email)
 	router.POST("/crypto", crypto)
 
-	router.NotFound = http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		w.WriteHeader(403)
-	})
+	router.NotFound = http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {})
 
 	return server.Run()
 }

@@ -2,9 +2,9 @@ package main
 
 import (
 	"flag"
+	"log"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/sunshineplan/service"
 	"github.com/sunshineplan/utils/flags"
@@ -18,12 +18,14 @@ func init() {
 	svc.Exec = run
 	svc.Options = service.Options{
 		Dependencies: []string{"Wants=network-online.target", "After=network.target"},
+		ExcludeFiles: []string{"scripts/srce.conf"},
 	}
 }
 
 var (
-	exclude = flag.String("exclude", "", "Exclude Files")
-	logPath = flag.String("log", "", "Log Path")
+	maxMemory  = flag.Int64("max", 32, "Max Memory(MB)")
+	uploadPath = flag.String("upload", "upload", "Upload Path")
+	logPath    = flag.String("log", "", "Log Path")
 )
 
 func main() {
@@ -42,7 +44,9 @@ func main() {
 	flags.SetConfigFile(filepath.Join(filepath.Dir(self), "config.ini"))
 	flags.Parse()
 
-	svc.Options.ExcludeFiles = strings.Split(*exclude, ",")
+	if *logPath != "" {
+		svc.SetLogger(*logPath, "", log.LstdFlags)
+	}
 
 	if err := svc.ParseAndRun(flag.Args()); err != nil {
 		svc.Fatal(err)
