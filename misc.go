@@ -88,16 +88,12 @@ func runCmd(cmd *exec.Cmd) (string, error) {
 }
 
 func execute(user, ip, path, command string, args ...string) (res string) {
-	const (
-		subject = "SRCE Notification - %s"
-		body    = "User: %s\nIP: %s\n\nCommand: %s"
-	)
 	cmd := exec.Command(path+command, args...)
 	res, err := runCmd(cmd)
 	if err != nil {
 		res = fmt.Sprintf("%s\n\nFailed:\n%s", res, err)
 	}
-	svc.Printf("SRCE Execute -"+body, user, ip, cmd)
+	svc.Printf("SRCE Execute - User: %s IP: %s Command: %s", user, ip, cmd)
 	dialer, to, err := getSubscribe()
 	if err != nil {
 		svc.Print(err)
@@ -105,8 +101,8 @@ func execute(user, ip, path, command string, args ...string) (res string) {
 	}
 	if err := dialer.Send(&mail.Message{
 		To:      to,
-		Subject: fmt.Sprintf(subject, time.Now().Format("20060102 15:04:05")),
-		Body:    fmt.Sprintf(body, user, ip, cmd),
+		Subject: fmt.Sprintf("SRCE Notification - %s", time.Now().Format("20060102 15:04:05")),
+		Body:    fmt.Sprintf("User: %s\nIP: %s\n\nCommand: %s", user, ip, cmd),
 	}); err != nil {
 		svc.Print(err)
 	}
