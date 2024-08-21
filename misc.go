@@ -73,11 +73,11 @@ func runCmd(cmd *exec.Cmd) (string, error) {
 
 	done := make(chan result)
 	go func() {
-		res := new(result)
+		var res result
 		res.stdout, _ = io.ReadAll(stdout)
 		res.stderr, _ = io.ReadAll(stderr)
 		res.err = cmd.Wait()
-		done <- *res
+		done <- res
 	}()
 	select {
 	case <-time.After(30 * time.Second):
@@ -90,14 +90,14 @@ func runCmd(cmd *exec.Cmd) (string, error) {
 func execute(user, ip, path, command string, args ...string) (res string) {
 	const (
 		subject = "SRCE Notification - %s"
-		body    = "%s\nUser: %s\nIP: %s\n\nCommand: %s"
+		body    = "User: %s\nIP: %s\n\nCommand: %s"
 	)
-
 	cmd := exec.Command(path+command, args...)
 	res, err := runCmd(cmd)
 	if err != nil {
-		res = fmt.Sprintf("Failed:\n\n%s", err)
+		res = fmt.Sprintf("%s\n\nFailed:\n%s", res, err)
 	}
+	svc.Printf("SRCE Execute -"+body, user, ip, cmd)
 	dialer, to, err := getSubscribe()
 	if err != nil {
 		svc.Print(err)
@@ -106,7 +106,7 @@ func execute(user, ip, path, command string, args ...string) (res string) {
 	if err := dialer.Send(&mail.Message{
 		To:      to,
 		Subject: fmt.Sprintf(subject, time.Now().Format("20060102 15:04:05")),
-		Body:    fmt.Sprintf(body, time.Now().Format("2006/01/02 - 15:04:05"), user, ip, cmd),
+		Body:    fmt.Sprintf(body, user, ip, cmd),
 	}); err != nil {
 		svc.Print(err)
 	}

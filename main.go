@@ -5,9 +5,11 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/sunshineplan/service"
 	"github.com/sunshineplan/utils/flags"
+	"github.com/sunshineplan/utils/txt"
 )
 
 var svc = service.New()
@@ -25,7 +27,8 @@ func init() {
 var (
 	maxMemory  = flag.Int64("max", 32, "Max Memory(MB)")
 	uploadPath = flag.String("upload", "upload", "Upload Path")
-	logPath    = flag.String("log", "", "Log Path")
+	logPath    = flag.String("log", "", "Log File Path")
+	envPath    = flag.String("env", ".env", "Environment File Path")
 )
 
 func main() {
@@ -46,6 +49,18 @@ func main() {
 
 	if *logPath != "" {
 		svc.SetLogger(*logPath, "", log.LstdFlags)
+	}
+
+	if s, err := txt.ReadFile(*envPath); err == nil {
+		for _, i := range s {
+			if s := strings.SplitN(i, "=", 2); len(s) == 2 {
+				os.Setenv(strings.TrimSpace(s[0]), strings.TrimSpace(s[1]))
+			} else if s := strings.TrimSpace(i); s != "" {
+				svc.Println("Unknown env:", s)
+			}
+		}
+	} else if *envPath != "" {
+		svc.Println("Failed to load env file:", err)
 	}
 
 	if err := svc.ParseAndRun(flag.Args()); err != nil {
