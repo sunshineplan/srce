@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"path/filepath"
 	"strconv"
@@ -212,4 +213,12 @@ func crypto(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	default:
 		w.WriteHeader(400)
 	}
+}
+
+func testHTTPRequest(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	fmt.Fprintln(w, "[Remote Address]")
+	fmt.Fprintln(w, r.RemoteAddr)
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "[Request]")
+	r.Write(w)
 }
