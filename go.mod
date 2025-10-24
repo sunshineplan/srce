@@ -1,13 +1,13 @@
 module srce
 
-go 1.24
+go 1.24.0
 
 require (
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/sunshineplan/cipher v1.0.8
 	github.com/sunshineplan/metadata v1.1.2
-	github.com/sunshineplan/service v1.0.22
-	github.com/sunshineplan/utils v0.1.80
+	github.com/sunshineplan/service v1.0.23
+	github.com/sunshineplan/utils v0.1.81
 )
 
-require golang.org/x/sys v0.32.0 // indirect
+require golang.org/x/sys v0.37.0 // indirect

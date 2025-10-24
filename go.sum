@@ -4,9 +4,9 @@ github.com/sunshineplan/cipher v1.0.8 h1:ej4l3fOANug9kwvMmVXsNaAbZMRtS+xp1Wi4cVN
 github.com/sunshineplan/cipher v1.0.8/go.mod h1:lwKJh5Shs++WVtKHJKYIZFEie78J3rmK0lqzn4Zdpvs=
 github.com/sunshineplan/metadata v1.1.2 h1:QaVM9vILH4v9zf0nl6n3fUT3JFcsVQUWA+vjx4kxMQY=
 github.com/sunshineplan/metadata v1.1.2/go.mod h1:AMRz7H4/Y8eXXid010zVj2oe19FADG36Ao7Sqjf51g8=
-github.com/sunshineplan/service v1.0.22 h1:MFXKIbcd3POiJb9KRI8oeybc2qN0p79vv9f+OL88EDU=
-github.com/sunshineplan/service v1.0.22/go.mod h1:JR7cTSNJVlajjXfXobA3Rr46z88M+6VK6coxq7JmyrY=
-github.com/sunshineplan/utils v0.1.80 h1:dVGZqO3HvwxqyDwuRLwCm2QMZp7Wx2//F15PnD4wOt4=
-github.com/sunshineplan/utils v0.1.80/go.mod h1:R7MInPRKnExzzNGJ9qY1W0+11P/3jc6IO5ICuGDPA1w=
-golang.org/x/sys v0.32.0 h1:s77OFDvIQeibCmezSnk/q6iAfkdiQaJi4VzroCFrN20=
-golang.org/x/sys v0.32.0/go.mod h1:BJP2sWEmIv4KK5OTEluFJCKSidICx8ciO85XgH3Ak8k=
+github.com/sunshineplan/service v1.0.23 h1:3Q27IySBklhJSN8X81IzTetK4Om76DjBadO+P5+uQoY=
+github.com/sunshineplan/service v1.0.23/go.mod h1:g0BVjUlA7ozRx7nS8VpqH4tUlEnD4qbXlH8+1M3m7U0=
+github.com/sunshineplan/utils v0.1.81 h1:0Y0nhwPB2ZCg14TedbFVX4FYKpCpEONsifWRPbSy0tE=
+github.com/sunshineplan/utils v0.1.81/go.mod h1:R7MInPRKnExzzNGJ9qY1W0+11P/3jc6IO5ICuGDPA1w=
+golang.org/x/sys v0.37.0 h1:fdNQudmxPjkdUTPnLn5mdQv7Zwvbvpaxqs831goi9kQ=
+golang.org/x/sys v0.37.0/go.mod h1:OgkHotnGiDImocRcuBABYBEXf8A9a87e/uXjp9XT3ks=
