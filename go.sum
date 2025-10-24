@@ -6,7 +6,7 @@ github.com/sunshineplan/metadata v1.1.2 h1:QaVM9vILH4v9zf0nl6n3fUT3JFcsVQUWA+vjx
 github.com/sunshineplan/metadata v1.1.2/go.mod h1:AMRz7H4/Y8eXXid010zVj2oe19FADG36Ao7Sqjf51g8=
 github.com/sunshineplan/service v1.0.22 h1:MFXKIbcd3POiJb9KRI8oeybc2qN0p79vv9f+OL88EDU=
 github.com/sunshineplan/service v1.0.22/go.mod h1:JR7cTSNJVlajjXfXobA3Rr46z88M+6VK6coxq7JmyrY=
-github.com/sunshineplan/utils v0.1.80 h1:dVGZqO3HvwxqyDwuRLwCm2QMZp7Wx2//F15PnD4wOt4=
-github.com/sunshineplan/utils v0.1.80/go.mod h1:R7MInPRKnExzzNGJ9qY1W0+11P/3jc6IO5ICuGDPA1w=
+github.com/sunshineplan/utils v0.1.82 h1:GmRfNLxhsKfkroRHZHTdxNE9GcF77t5+A2rLOZnwtmM=
+github.com/sunshineplan/utils v0.1.82/go.mod h1:R7MInPRKnExzzNGJ9qY1W0+11P/3jc6IO5ICuGDPA1w=
 golang.org/x/sys v0.32.0 h1:s77OFDvIQeibCmezSnk/q6iAfkdiQaJi4VzroCFrN20=
 golang.org/x/sys v0.32.0/go.mod h1:BJP2sWEmIv4KK5OTEluFJCKSidICx8ciO85XgH3Ak8k=
